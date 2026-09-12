@@ -193,7 +193,7 @@ export function ExamProvider({ children }) {
   };
 
   // Submit Examination Engine
-  const submitExam = (isAutoSubmit = false) => {
+  const submitExam = (isAutoSubmit = false, studentUser = null) => {
     if (!activeExam || !activeQuestions.length) return null;
 
     let obtainedMarks = 0;
@@ -221,15 +221,17 @@ export function ExamProvider({ children }) {
     const passStatus = percentage >= activeExam.passPercentage ? 'PASS' : 'FAIL';
     const accuracy = (correctCount + wrongCount) > 0 ? Math.round((correctCount / (correctCount + wrongCount)) * 100) : 0;
 
+    const sUser = studentUser || { id: 'usr_student1', name: 'Rahul V. Sharma', rollNo: '21CSE104' };
+
     const newResult = {
       id: `res_${Date.now()}`,
       attemptId: `att_${Date.now()}`,
       examId: activeExam.id,
       examTitle: activeExam.title,
       subjectCode: activeExam.subjectCode,
-      studentId: 'usr_student1',
-      studentName: 'Rahul V. Sharma',
-      rollNo: '21CSE104',
+      studentId: sUser.id || sUser.rollNo || 'usr_student1',
+      studentName: sUser.name || 'Rahul V. Sharma',
+      rollNo: sUser.rollNo || sUser.username || '21CSE104',
       totalMarks: activeExam.totalMarks,
       obtainedMarks: finalMarks,
       percentage,

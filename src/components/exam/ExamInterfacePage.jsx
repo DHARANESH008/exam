@@ -72,7 +72,7 @@ export default function ExamInterfacePage({ onFinishExam }) {
   );
 
   const handleFinalSubmit = () => {
-    const result = submitExam();
+    const result = submitExam(false, currentUser);
     setShowSubmitModal(false);
     if (onFinishExam) {
       onFinishExam(result);

@@ -129,55 +129,75 @@ export default function StudentOverview({ activeTab, setActiveTab, onStartExam, 
         </div>
 
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '1.25rem' }}>
-          {activeExams.map(exam => (
-            <div key={exam.id} className="card card-hover" style={{ borderLeft: '4px solid #059669', backgroundColor: '#ffffff' }}>
-              
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.75rem' }}>
-                <span className="badge badge-green" style={{ background: '#d1fae5', color: '#065f46' }}>● LIVE NOW</span>
-                <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)', fontWeight: '700' }}>
-                  {exam.subjectCode}
-                </span>
+          {activeExams.map(exam => {
+            const existingResult = results.find(r => r.examId === exam.id && (r.studentId === currentUser?.id || r.rollNo === currentUser?.rollNo));
+            const isCompleted = !!existingResult;
+
+            return (
+              <div key={exam.id} className="card card-hover" style={{ borderLeft: isCompleted ? '4px solid #10b981' : '4px solid #059669', backgroundColor: '#ffffff' }}>
+                
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.75rem' }}>
+                  {isCompleted ? (
+                    <span className="badge badge-green" style={{ background: '#d1fae5', color: '#065f46', fontWeight: '800' }}>✓ COMPLETED</span>
+                  ) : (
+                    <span className="badge badge-green" style={{ background: '#d1fae5', color: '#065f46' }}>● LIVE NOW</span>
+                  )}
+                  <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)', fontWeight: '700' }}>
+                    {exam.subjectCode}
+                  </span>
+                </div>
+
+                <h3 style={{ fontSize: '1.05rem', fontWeight: '800', marginBottom: '0.5rem', color: 'var(--text-main)' }}>
+                  {exam.title}
+                </h3>
+                
+                <p style={{ fontSize: '0.82rem', color: 'var(--text-muted)', marginBottom: '1rem' }}>
+                  Faculty: {exam.createdByName} • {exam.department}
+                </p>
+
+                <div style={{
+                  background: '#f8fafc',
+                  border: '1px solid #e2e8f0',
+                  padding: '0.75rem',
+                  borderRadius: 'var(--radius-sm)',
+                  display: 'grid',
+                  gridTemplateColumns: '1fr 1fr',
+                  gap: '0.5rem',
+                  fontSize: '0.8rem',
+                  marginBottom: '1.25rem'
+                }}>
+                  <div><strong>Duration:</strong> {exam.durationMinutes} mins</div>
+                  <div><strong>Total Marks:</strong> {exam.totalMarks}</div>
+                  <div><strong>Questions:</strong> {exam.totalQuestions}</div>
+                  <div><strong>Pass Mark:</strong> {exam.passPercentage}%</div>
+                </div>
+
+                {isCompleted ? (
+                  <button
+                    onClick={() => onViewResult(existingResult)}
+                    className="btn btn-secondary"
+                    style={{ width: '100%', borderColor: '#a7f3d0', color: '#065f46', fontWeight: '800' }}
+                  >
+                    <CheckCircle2 size={16} color="#059669" />
+                    <span>View Scorecard & Solution Key</span>
+                  </button>
+                ) : (
+                  <button
+                    onClick={() => {
+                      setSelectedExamForInstructions(exam);
+                      setAgreedInstructions(false);
+                    }}
+                    className="btn btn-primary"
+                    style={{ width: '100%', backgroundColor: '#059669', border: 'none', fontWeight: '800' }}
+                  >
+                    <span>Read Instructions & Start Exam</span>
+                    <ArrowRight size={16} />
+                  </button>
+                )}
+
               </div>
-
-              <h3 style={{ fontSize: '1.05rem', fontWeight: '800', marginBottom: '0.5rem', color: 'var(--text-main)' }}>
-                {exam.title}
-              </h3>
-              
-              <p style={{ fontSize: '0.82rem', color: 'var(--text-muted)', marginBottom: '1rem' }}>
-                Faculty: {exam.createdByName} • {exam.department}
-              </p>
-
-              <div style={{
-                background: '#f8fafc',
-                border: '1px solid #e2e8f0',
-                padding: '0.75rem',
-                borderRadius: 'var(--radius-sm)',
-                display: 'grid',
-                gridTemplateColumns: '1fr 1fr',
-                gap: '0.5rem',
-                fontSize: '0.8rem',
-                marginBottom: '1.25rem'
-              }}>
-                <div><strong>Duration:</strong> {exam.durationMinutes} mins</div>
-                <div><strong>Total Marks:</strong> {exam.totalMarks}</div>
-                <div><strong>Questions:</strong> {exam.totalQuestions}</div>
-                <div><strong>Pass Mark:</strong> {exam.passPercentage}%</div>
-              </div>
-
-              <button
-                onClick={() => {
-                  setSelectedExamForInstructions(exam);
-                  setAgreedInstructions(false);
-                }}
-                className="btn btn-primary"
-                style={{ width: '100%', backgroundColor: '#059669', border: 'none', fontWeight: '800' }}
-              >
-                <span>Read Instructions & Start Exam</span>
-                <ArrowRight size={16} />
-              </button>
-
-            </div>
-          ))}
+            );
+          })}
         </div>
 
         {/* Instructions Modal */}
