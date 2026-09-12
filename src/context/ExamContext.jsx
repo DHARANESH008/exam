@@ -216,8 +216,11 @@ export function ExamProvider({ children }) {
       }
     });
 
+    const computedExamTotalMarks = activeQuestions.reduce((sum, q) => sum + Number(q.marks || 1), 0);
+    const examTotalMarks = computedExamTotalMarks > 0 ? computedExamTotalMarks : (activeExam.totalMarks || 1);
+
     const finalMarks = Math.max(0, parseFloat(obtainedMarks.toFixed(2)));
-    const percentage = Math.round((finalMarks / activeExam.totalMarks) * 100);
+    const percentage = Math.round((finalMarks / examTotalMarks) * 100);
     const passStatus = percentage >= activeExam.passPercentage ? 'PASS' : 'FAIL';
     const accuracy = (correctCount + wrongCount) > 0 ? Math.round((correctCount / (correctCount + wrongCount)) * 100) : 0;
 
@@ -232,7 +235,7 @@ export function ExamProvider({ children }) {
       studentId: sUser.id || sUser.rollNo || 'usr_student1',
       studentName: sUser.name || 'Rahul V. Sharma',
       rollNo: sUser.rollNo || sUser.username || '21CSE104',
-      totalMarks: activeExam.totalMarks,
+      totalMarks: examTotalMarks,
       obtainedMarks: finalMarks,
       percentage,
       correctCount,
@@ -261,11 +264,17 @@ export function ExamProvider({ children }) {
 
   // Add new exam (Faculty/Admin feature)
   const createExam = (newExamData) => {
+    const assignedQIds = newExamData.questionIds || [];
+    const assignedQs = questions.filter(q => assignedQIds.includes(q.id));
+    const calculatedTotalMarks = assignedQs.reduce((sum, q) => sum + Number(q.marks || 0), 0);
+
     const created = {
       id: `ex_${Date.now()}`,
       ...newExamData,
+      totalQuestions: assignedQIds.length,
+      totalMarks: calculatedTotalMarks > 0 ? calculatedTotalMarks : (newExamData.totalMarks || 50),
       status: 'SCHEDULED',
-      questionIds: newExamData.questionIds || ['q1', 'q2', 'q3', 'q4', 'q5']
+      questionIds: assignedQIds
     };
     setExams(prev => [created, ...prev]);
     return created;

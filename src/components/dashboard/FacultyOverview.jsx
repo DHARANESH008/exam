@@ -49,6 +49,9 @@ export default function FacultyOverview({ activeTab, setActiveTab }) {
   });
 
   // New Exam Form State
+  const initialSelectedQIds = questions.map(q => q.id);
+  const initialCalculatedMarks = questions.reduce((sum, q) => sum + Number(q.marks || 0), 0);
+
   const [newExam, setNewExam] = useState({
     title: '',
     subjectCode: 'CS303',
@@ -56,10 +59,10 @@ export default function FacultyOverview({ activeTab, setActiveTab }) {
     department: 'CSE',
     batch: '3rd Year CSE',
     durationMinutes: 30,
-    totalMarks: 50,
+    totalMarks: initialCalculatedMarks || 50,
     passPercentage: 50,
     negativeMarkingEnabled: true,
-    selectedQuestionIds: questions.map(q => q.id)
+    selectedQuestionIds: initialSelectedQIds
   });
 
   // Sample CSV/Text Template Generator
@@ -158,9 +161,13 @@ What happens when main method is declared private?,Compiles but runtime error,Co
     e.preventDefault();
     if (!newExam.title || !newExam.selectedQuestionIds.length) return;
 
+    const selectedQs = questions.filter(q => newExam.selectedQuestionIds.includes(q.id));
+    const calculatedTotalMarks = selectedQs.reduce((sum, q) => sum + Number(q.marks || 0), 0);
+
     createExam({
       ...newExam,
       totalQuestions: newExam.selectedQuestionIds.length,
+      totalMarks: calculatedTotalMarks > 0 ? calculatedTotalMarks : newExam.totalMarks,
       createdByName: currentUser?.name || 'Dr. Anitha Sharma',
       instructions: [
         `Exam duration is ${newExam.durationMinutes} minutes.`,
@@ -176,11 +183,17 @@ What happens when main method is declared private?,Compiles but runtime error,Co
   const toggleQuestionForExam = (qId) => {
     setNewExam(prev => {
       const exists = prev.selectedQuestionIds.includes(qId);
+      const nextIds = exists
+        ? prev.selectedQuestionIds.filter(id => id !== qId)
+        : [...prev.selectedQuestionIds, qId];
+
+      const nextSelectedQs = questions.filter(q => nextIds.includes(q.id));
+      const calculatedTotalMarks = nextSelectedQs.reduce((sum, q) => sum + Number(q.marks || 0), 0);
+
       return {
         ...prev,
-        selectedQuestionIds: exists
-          ? prev.selectedQuestionIds.filter(id => id !== qId)
-          : [...prev.selectedQuestionIds, qId]
+        selectedQuestionIds: nextIds,
+        totalMarks: calculatedTotalMarks
       };
     });
   };
@@ -305,8 +318,11 @@ What happens when main method is declared private?,Compiles but runtime error,Co
                 <input type="number" required value={newExam.durationMinutes} onChange={(e) => setNewExam({ ...newExam, durationMinutes: Number(e.target.value) })} className="form-input" />
               </div>
               <div>
-                <label className="form-label">Total Marks</label>
-                <input type="number" required value={newExam.totalMarks} onChange={(e) => setNewExam({ ...newExam, totalMarks: Number(e.target.value) })} className="form-input" />
+                <label className="form-label" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span>Total Marks</span>
+                  <span style={{ fontSize: '0.72rem', color: '#059669', fontWeight: '700' }}>✓ Auto-calculated</span>
+                </label>
+                <input type="number" required value={newExam.totalMarks} onChange={(e) => setNewExam({ ...newExam, totalMarks: Number(e.target.value) })} className="form-input" placeholder="Auto-calculated from questions" />
               </div>
             </div>
 
