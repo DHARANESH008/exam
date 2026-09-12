@@ -24,7 +24,14 @@ export function ExamProvider({ children }) {
   const [questions, setQuestions] = useState(() => {
     const saved = localStorage.getItem('svgi_questions_v1');
     if (saved) {
-      try { return JSON.parse(saved); } catch (e) {}
+      try {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          const existingIds = new Set(parsed.map(q => q.id));
+          const missingMocks = MOCK_QUESTIONS.filter(q => !existingIds.has(q.id));
+          return [...parsed, ...missingMocks];
+        }
+      } catch (e) {}
     }
     return MOCK_QUESTIONS;
   });

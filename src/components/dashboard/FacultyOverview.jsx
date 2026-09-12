@@ -206,7 +206,7 @@ What happens when main method is declared private?,Compiles but runtime error,Co
           <div>
             <h2 style={{ fontSize: '1.25rem', fontWeight: '900', color: 'var(--accent-slate)', display: 'flex', alignItems: 'center', gap: '0.5rem', margin: 0 }}>
               <HelpCircle size={22} color="#059669" />
-              <span>Subject Question Bank ({questions.length} Single Questions)</span>
+              <span>Subject Question Bank ({questions.length} Questions Available)</span>
             </h2>
             <p style={{ fontSize: '0.82rem', color: 'var(--text-muted)', marginTop: '0.2rem' }}>
               Manage individual questions or bulk upload questions via CSV/TXT files for student exams.
@@ -218,7 +218,7 @@ What happens when main method is declared private?,Compiles but runtime error,Co
               <Upload size={14} /> Bulk File Upload
             </button>
             <button onClick={() => setShowAddQuestionModal(true)} className="btn btn-primary" style={{ fontSize: '0.82rem', backgroundColor: '#059669', fontWeight: '700' }}>
-              + Add Single Question
+              + Add New Question
             </button>
           </div>
         </div>
@@ -234,7 +234,7 @@ What happens when main method is declared private?,Compiles but runtime error,Co
             }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.4rem', flexWrap: 'wrap', gap: '0.5rem' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                  <span style={{ fontWeight: '900', color: '#059669', fontSize: '0.95rem' }}>Single Question #{idx + 1}</span>
+                  <span style={{ fontWeight: '900', color: '#059669', fontSize: '0.95rem' }}>Question #{idx + 1}</span>
                   <span className="badge badge-gray">{q.topic}</span>
                   <span className={`badge ${q.difficulty === 'EASY' ? 'badge-green' : q.difficulty === 'MEDIUM' ? 'badge-yellow' : 'badge-red'}`}>{q.difficulty}</span>
                 </div>
@@ -330,7 +330,7 @@ What happens when main method is declared private?,Compiles but runtime error,Co
             <div className="form-group">
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
                 <label className="form-label" style={{ fontWeight: '800', color: '#059669', margin: 0 }}>
-                  Allocate Single Questions from Question Bank ({newExam.selectedQuestionIds.length} Selected):
+                  Allocate Questions from Question Bank ({newExam.selectedQuestionIds.length} Selected):
                 </label>
                 <span className="badge badge-green">
                   {questions.length} Available in Bank
