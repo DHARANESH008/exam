@@ -7,21 +7,17 @@ spring:
   application:
     name: smartexam-backend
   datasource:
-    url: ${JDBC_DATABASE_URL:jdbc:h2:file:./data/smartexam_db;DB_CLOSE_DELAY=-1;AUTO_SERVER=TRUE}
-    driver-class-name: ${JDBC_DRIVER:org.h2.Driver}
-    username: ${JDBC_DATABASE_USERNAME:sa}
-    password: ${JDBC_DATABASE_PASSWORD:}
-  h2:
-    console:
-      enabled: true
-      path: /h2-console
+    url: ${JDBC_DATABASE_URL:jdbc:mysql://localhost:3306/smartexam_db?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC}
+    driver-class-name: ${JDBC_DRIVER:com.mysql.cj.jdbc.Driver}
+    username: ${JDBC_DATABASE_USERNAME:root}
+    password: ${JDBC_DATABASE_PASSWORD:password}
   jpa:
     hibernate:
       ddl-auto: update
     show-sql: false
     properties:
       hibernate:
-        dialect: ${HIBERNATE_DIALECT:org.hibernate.dialect.H2Dialect}
+        dialect: ${HIBERNATE_DIALECT:org.hibernate.dialect.MySQLDialect}
 
 smartexam:
   jwt:
