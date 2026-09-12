@@ -10,3 +10,12 @@ services:
         value: 8080
       - key: SPRING_PROFILES_ACTIVE
         value: prod
+      - key: JDBC_DATABASE_URL
+        fromDatabase:
+          name: smartexam-db
+          property: connectionString
+
+databases:
+  - name: smartexam-db
+    databaseName: smartexam_db
+    user: smartexam_user
