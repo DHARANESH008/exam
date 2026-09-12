@@ -33,6 +33,8 @@ public class SecurityConfig {
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/api/auth/**").permitAll()
                 .requestMatchers("/api/public/**").permitAll()
+                .requestMatchers("/api/exams/**").permitAll()
+                .requestMatchers("/api/health").permitAll()
                 .requestMatchers("/api/admin/**").hasAnyAuthority("SUPER_ADMIN", "EXAM_ADMIN")
                 .requestMatchers("/api/faculty/**").hasAnyAuthority("FACULTY", "HOD", "EXAM_ADMIN")
                 .requestMatchers("/api/student/**").hasAuthority("STUDENT")
@@ -45,7 +47,7 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(List.of("http://localhost:3000", "http://localhost:5173"));
+        configuration.setAllowedOriginPatterns(List.of("*"));
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("*"));
         configuration.setAllowCredentials(true);
