@@ -1,0 +1,26 @@
+server:
+  port: 8080
+  servlet:
+    context-path: /api
+
+spring:
+  application:
+    name: smartexam-backend
+  datasource:
+    url: jdbc:mysql://localhost:3306/smartexam_db?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+    username: root
+    password: password
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+        dialect: org.hibernate.dialect.MySQLDialect
+
+smartexam:
+  jwt:
+    secret: 9a6e2361b1b4f4c82c875d9e5f7a01a3b8c6e2a1b9d4f8c7a6e5b4c3d2e1f0a9
+    expiration-ms: 86400000 # 24 hours
