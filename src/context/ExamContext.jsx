@@ -12,9 +12,42 @@ export const QUESTION_STATES = {
 };
 
 export function ExamProvider({ children }) {
-  const [exams, setExams] = useState(MOCK_EXAMS);
-  const [questions, setQuestions] = useState(MOCK_QUESTIONS);
-  const [results, setResults] = useState(MOCK_STUDENT_RESULTS);
+  // Persistent Storage for Exams, Questions, and Submissions
+  const [exams, setExams] = useState(() => {
+    const saved = localStorage.getItem('svgi_exams_v1');
+    if (saved) {
+      try { return JSON.parse(saved); } catch (e) {}
+    }
+    return MOCK_EXAMS;
+  });
+
+  const [questions, setQuestions] = useState(() => {
+    const saved = localStorage.getItem('svgi_questions_v1');
+    if (saved) {
+      try { return JSON.parse(saved); } catch (e) {}
+    }
+    return MOCK_QUESTIONS;
+  });
+
+  const [results, setResults] = useState(() => {
+    const saved = localStorage.getItem('svgi_results_v1');
+    if (saved) {
+      try { return JSON.parse(saved); } catch (e) {}
+    }
+    return MOCK_STUDENT_RESULTS;
+  });
+
+  useEffect(() => {
+    localStorage.setItem('svgi_exams_v1', JSON.stringify(exams));
+  }, [exams]);
+
+  useEffect(() => {
+    localStorage.setItem('svgi_questions_v1', JSON.stringify(questions));
+  }, [questions]);
+
+  useEffect(() => {
+    localStorage.setItem('svgi_results_v1', JSON.stringify(results));
+  }, [results]);
 
   // Active Exam Attempt State
   const [activeExam, setActiveExam] = useState(null);
@@ -22,14 +55,14 @@ export function ExamProvider({ children }) {
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   
   // Answers & Palette Status Maps
-  const [answers, setAnswers] = useState({}); // { [qId]: optionIndex }
-  const [bookmarks, setBookmarks] = useState({}); // { [qId]: boolean }
-  const [visited, setVisited] = useState({}); // { [qId]: boolean }
+  const [answers, setAnswers] = useState({});
+  const [bookmarks, setBookmarks] = useState({});
+  const [visited, setVisited] = useState({});
   
   // Timer & Security
   const [remainingSeconds, setRemainingSeconds] = useState(0);
   const [isExamStarted, setIsExamStarted] = useState(false);
-  const [autoSaveStatus, setAutoSaveStatus] = useState('idle'); // 'saving' | 'saved' | 'error'
+  const [autoSaveStatus, setAutoSaveStatus] = useState('idle');
   const [lastSavedTime, setLastSavedTime] = useState(null);
 
   const timerRef = useRef(null);
@@ -41,7 +74,6 @@ export function ExamProvider({ children }) {
 
     const examQuestionsList = questions.filter(q => targetExam.questionIds.includes(q.id));
 
-    // Restore existing draft from localStorage if present
     const storageKey = `smart_attempt_${examId}`;
     const savedAttempt = localStorage.getItem(storageKey);
 
@@ -57,9 +89,7 @@ export function ExamProvider({ children }) {
         initialBookmarks = parsed.bookmarks || {};
         initialVisited = parsed.visited || initialVisited;
         initialSecs = parsed.remainingSeconds ?? initialSecs;
-      } catch (e) {
-        console.error('Error loading saved attempt', e);
-      }
+      } catch (e) {}
     }
 
     setActiveExam(targetExam);
@@ -74,59 +104,56 @@ export function ExamProvider({ children }) {
     return true;
   };
 
-  // Timer Tick
-  useEffect(() => {
-    if (isExamStarted && remainingSeconds > 0) {
-      timerRef.current = setInterval(() => {
-        setRemainingSeconds(prev => {
-          if (prev <= 1) {
-            clearInterval(timerRef.current);
-            submitExam(true); // Auto-submit when time reaches zero
-            return 0;
-          }
-          return prev - 1;
-        });
-      }, 1000);
-    } else {
-      clearInterval(timerRef.current);
-    }
-
-    return () => clearInterval(timerRef.current);
-  }, [isExamStarted, remainingSeconds]);
-
-  // Persistence Auto-Save Engine
+  // Real-time Draft Saver
   const saveAttemptState = (newAnswers, newBookmarks, newVisited) => {
     if (!activeExam) return;
     setAutoSaveStatus('saving');
+    const storageKey = `smart_attempt_${activeExam.id}`;
+    const payload = {
+      answers: newAnswers,
+      bookmarks: newBookmarks,
+      visited: newVisited,
+      remainingSeconds,
+      timestamp: Date.now()
+    };
+    localStorage.setItem(storageKey, JSON.stringify(payload));
     
-    try {
-      const storageKey = `smart_attempt_${activeExam.id}`;
-      localStorage.setItem(storageKey, JSON.stringify({
-        examId: activeExam.id,
-        answers: newAnswers,
-        bookmarks: newBookmarks,
-        visited: newVisited,
-        remainingSeconds,
-        updatedAt: new Date().toISOString()
-      }));
-
-      setTimeout(() => {
-        setAutoSaveStatus('saved');
-        setLastSavedTime(new Date().toLocaleTimeString());
-      }, 200);
-    } catch (e) {
-      setAutoSaveStatus('error');
-    }
+    setTimeout(() => {
+      setAutoSaveStatus('saved');
+      setLastSavedTime(new Date().toLocaleTimeString());
+    }, 200);
   };
 
-  // Select Option Answer
+  // Timer Tick & Auto-Submit
+  useEffect(() => {
+    if (!isExamStarted || remainingSeconds <= 0) return;
+
+    timerRef.current = setInterval(() => {
+      setRemainingSeconds(prev => {
+        if (prev <= 1) {
+          clearInterval(timerRef.current);
+          submitExam(true);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => {
+      if (timerRef.current) clearInterval(timerRef.current);
+    };
+  }, [isExamStarted, remainingSeconds]);
+
+  // Answer Select Handler
   const selectAnswer = (questionId, optionIndex) => {
     const updatedAnswers = { ...answers, [questionId]: optionIndex };
+    const updatedVisited = { ...visited, [questionId]: true };
     setAnswers(updatedAnswers);
-    saveAttemptState(updatedAnswers, bookmarks, visited);
+    setVisited(updatedVisited);
+    saveAttemptState(updatedAnswers, bookmarks, updatedVisited);
   };
 
-  // Clear Response
+  // Clear Choice Handler
   const clearAnswer = (questionId) => {
     const updatedAnswers = { ...answers };
     delete updatedAnswers[questionId];
@@ -134,17 +161,14 @@ export function ExamProvider({ children }) {
     saveAttemptState(updatedAnswers, bookmarks, visited);
   };
 
-  // Toggle Bookmark
+  // Bookmark Toggle Handler
   const toggleBookmark = (questionId) => {
-    const updatedBookmarks = {
-      ...bookmarks,
-      [questionId]: !bookmarks[questionId]
-    };
+    const updatedBookmarks = { ...bookmarks, [questionId]: !bookmarks[questionId] };
     setBookmarks(updatedBookmarks);
     saveAttemptState(answers, updatedBookmarks, visited);
   };
 
-  // Navigate to Question
+  // Navigation Handlers
   const goToQuestion = (index) => {
     if (index >= 0 && index < activeQuestions.length) {
       setCurrentQuestionIndex(index);
@@ -227,7 +251,6 @@ export function ExamProvider({ children }) {
 
     setResults(prev => [newResult, ...prev]);
 
-    // Clear local storage attempt draft
     localStorage.removeItem(`smart_attempt_${activeExam.id}`);
     setIsExamStarted(false);
 

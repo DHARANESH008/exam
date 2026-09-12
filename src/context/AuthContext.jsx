@@ -4,7 +4,17 @@ import { MOCK_USERS, MOCK_ROLES } from '../data/mockData';
 const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
-  const [usersList, setUsersList] = useState(MOCK_USERS);
+  const [usersList, setUsersList] = useState(() => {
+    const saved = localStorage.getItem('svgi_users_v1');
+    if (saved) {
+      try { return JSON.parse(saved); } catch (e) {}
+    }
+    return MOCK_USERS;
+  });
+
+  useEffect(() => {
+    localStorage.setItem('svgi_users_v1', JSON.stringify(usersList));
+  }, [usersList]);
   
   // Unauthenticated by default until user logs in via LoginPage or selects a demo user
   const [currentUser, setCurrentUser] = useState(() => {
